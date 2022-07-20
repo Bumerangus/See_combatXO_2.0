@@ -286,6 +286,7 @@ class Game:
                 break
             num += 1
 
+
     def start(self):
         self.greet()
         self.loop()
