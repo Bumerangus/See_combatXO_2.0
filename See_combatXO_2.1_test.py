@@ -202,7 +202,7 @@ class AI(Player):
 class User(Player):
     def ask(self):
         while True:
-            cords = input("X Y - ").split()
+            cords = f'{randint(0, 5)}',  f'{randint(0, 5)}'
             if len(cords) != 2:
                 print(" Введите 2 координаты ")
                 continue
@@ -219,7 +219,7 @@ class Game:
         self.size = size
         pl = self.random_board()
         co = self.random_board()
-        co.hid = True
+        co.hid = False
         self.ai = AI(co, pl)
         self.us = User(pl, co)
 
@@ -283,6 +283,7 @@ class Game:
                 ho_move = 0
                 if succes_dot:
                     succes_dots.append(succes_dot)
+                    print(succes_dots)
             if repeat:
                 num -= 1
 

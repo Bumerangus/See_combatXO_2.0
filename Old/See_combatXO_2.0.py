@@ -3,10 +3,6 @@ import time
 
 # Exceptions
 ship_lives = None
-succes_dots = []
-attempt_shot = 0
-repeat = None
-ho_move = None
 
 class BoardException(Exception):
     pass
@@ -80,6 +76,8 @@ class Board:
         self.count = 0                            # Кол- во подбитых кораблей
         self.field = [['0'] * size for _ in range(size)]
         self.busy = []
+        global busy
+        busy = self.busy
         self.ships = []
 
     def __str__(self):
@@ -119,7 +117,7 @@ class Board:
         self.contour(ship)
 
     def shot(self, d):
-        global succes_dot, succes_dots, repeat
+        global D
         if self.out(d):
             raise BoardOutException()
         if d in self.busy:
@@ -129,17 +127,17 @@ class Board:
             if ship.shooten(d):
                 ship.lives -= 1
                 self.field[d.x][d.y] = "X"
+                global ship_lives
+                ship_lives = ship.lives
                 if ship.lives == 0:
                     self.count += 1
                     self.contour(ship, verb=True)
                     print("Корабль уничтожен!")
-                    if ho_move == 0:
-                        succes_dots = []
                     return True
                 else:
                     print("Буум..Баах...")
-                    if ship.lives:
-                        succes_dot = d
+                    if ship.lives == 1:
+                        D = d
                     return True
 
         self.field[d.x][d.y] = "."
@@ -170,23 +168,14 @@ class Player:
 
 class AI(Player):
     def ask(self):
-        global succes_dot, succes_dots, attempt_shot
-        if succes_dots:
-            attempt_shot += 1
-            rand_var = randint(0, 3)
-            D = succes_dots[-1]
-            if attempt_shot > 10:
-                D = succes_dots[-2]
-            elif attempt_shot > 100:
-                d = Dot(randint(0, 5), randint(0, 5))
-                print(f"Ход ИИ: {d.x + 1} {d.y + 1}")
-                return d
-            v_1 = Dot(D.x + 1, D.y)    # 0
-            v_2 = Dot(D.x - 1, D.y)    # 1
-            v_3 = Dot(D.x, D.y + 1)    # 2
-            v_4 = Dot(D.x, D.y - 1)    # 3
+        global D
+        if ship_lives:
+            v_1 = Dot(D.x + 1, D.y)
+            v_2 = Dot(D.x - 1, D.y)
+            v_3 = Dot(D.x, D.y + 1)
+            v_4 = Dot(D.x, D.y - 1)
             var = [v_1, v_2, v_3, v_4]
-            d = var[rand_var]
+            d = var[randint(0, 3)]
             if not((0 <= d.x < 6) and (0 <= d.y < 6)):
                 print(f"Ход ИИ: {d.x + 1} {d.y + 1}")
                 raise BoardOutExceptionAI()
@@ -196,6 +185,7 @@ class AI(Player):
         else:
             d = Dot(randint(0, 5), randint(0, 5))
             print(f"Ход ИИ: {d.x + 1} {d.y + 1}")
+            D = d
             return d
 
 
@@ -267,22 +257,16 @@ class Game:
         print("-" * 20)
 
     def loop(self):
-        global succes_dots, succes_dot, repeat, ho_move
         num = 0
         while True:
             self.print_boards()
             if num % 2 == 0:
                 print("Ваш ход")
                 repeat = self.us.move()
-                succes_dot = None
-                ho_move = 1
             else:
                 print("Ход ИИ")
-                time.sleep(0)
+                time.sleep(3)
                 repeat = self.ai.move()
-                ho_move = 0
-                if succes_dot:
-                    succes_dots.append(succes_dot)
             if repeat:
                 num -= 1
 
@@ -301,6 +285,7 @@ class Game:
                 print("Вы запустили восстание машин..")
                 break
             num += 1
+
 
     def start(self):
         self.greet()
