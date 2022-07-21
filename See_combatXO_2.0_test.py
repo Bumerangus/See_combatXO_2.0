@@ -3,10 +3,13 @@ import time
 
 # Exceptions
 ship_lives = None
+succes_dot = None
 succes_dots = []
 attempt_shot = 0
 repeat = None
 ho_move = None
+D = None
+
 
 class BoardException(Exception):
     pass
@@ -119,7 +122,7 @@ class Board:
         self.contour(ship)
 
     def shot(self, d):
-        global succes_dot, succes_dots, repeat
+        global succes_dot, succes_dots, repeat, D, attempt_shot, ho_move
         if self.out(d):
             raise BoardOutException()
         if d in self.busy:
@@ -135,15 +138,20 @@ class Board:
                     print("Корабль уничтожен!")
                     if ho_move == 0:
                         succes_dots = []
+                        succes_dot = None
+                        D = None
+                        attempt_shot = 0
                     return True
                 else:
                     print("Буум..Баах...")
-                    if ship.lives:
+                    if ho_move == 0:
                         succes_dot = d
+                        print(succes_dot)
                     return True
 
         self.field[d.x][d.y] = "."
         print("Промазал!")
+        succes_dot = None
         return False
 
     def begin(self):
@@ -159,6 +167,7 @@ class Player:
         raise NotImplementedError()
 
     def move(self):
+        global repeat
         while True:
             try:
                 target = self.ask()
@@ -170,12 +179,13 @@ class Player:
 
 class AI(Player):
     def ask(self):
-        global succes_dot, succes_dots, attempt_shot
+        global succes_dot, succes_dots, attempt_shot, D
         if succes_dots:
             attempt_shot += 1
             rand_var = randint(0, 3)
             D = succes_dots[-1]
-            if attempt_shot > 10:
+            if attempt_shot > 30:
+                print(succes_dots)
                 D = succes_dots[-2]
             elif attempt_shot > 100:
                 d = Dot(randint(0, 5), randint(0, 5))
@@ -202,7 +212,7 @@ class AI(Player):
 class User(Player):
     def ask(self):
         while True:
-            cords = f'{randint(0, 5)}',  f'{randint(0, 5)}'
+            cords = f'{randint(1, 6)}', f'{randint(1, 6)}'
             if len(cords) != 2:
                 print(" Введите 2 координаты ")
                 continue
@@ -212,6 +222,17 @@ class User(Player):
                 continue
             x, y = int(x), int(y)
             return Dot(x - 1, y - 1)
+
+
+def greet():
+    print("  See Combat 2.0  ")
+    print("-" * 50)
+    print("  Вам предстоит победить искуственный интелект.\n Он попытается выйграть у вас в морской бой 6x6.  ")
+    print("             От исхода этой битвы  ")
+    print("                  зависит судьба человечества...")
+    print("-" * 50)
+    print("Вводи координаты в формате - X Y")
+    print(" X - строка, Y - столбец")
 
 
 class Game:
@@ -247,16 +268,6 @@ class Game:
             board = self.try_board()
         return board
 
-    def greet(self):
-        print("  See Combat 2.0  ")
-        print("-" * 50)
-        print("  Вам предстоит победить искуственный интелект.\n Он попытается выйграть у вас в морской бой 6x6.  ")
-        print("             От исхода этой битвы  ")
-        print("                  зависит судьба человечества...")
-        print("-" * 50)
-        print("Вводи координаты в формате - X Y")
-        print(" X - строка, Y - столбец")
-
     def print_boards(self):
         print("-" * 20)
         print("Ваши корабли:")
@@ -273,14 +284,14 @@ class Game:
             self.print_boards()
             if num % 2 == 0:
                 print("Ваш ход")
+                ho_move = 1
                 repeat = self.us.move()
                 succes_dot = None
-                ho_move = 1
             else:
                 print("Ход ИИ")
+                ho_move = 0
                 time.sleep(0)
                 repeat = self.ai.move()
-                ho_move = 0
                 if succes_dot:
                     succes_dots.append(succes_dot)
                     print(succes_dots)
@@ -304,7 +315,7 @@ class Game:
             num += 1
 
     def start(self):
-        self.greet()
+        greet()
         self.loop()
 
 
